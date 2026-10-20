@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import './globals.css';
+import './compiled.css';
 
 export const metadata: Metadata = {
   title: 'FORMORA 3D — AI Product Packaging Studio',

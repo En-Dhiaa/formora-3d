@@ -194,3 +194,27 @@ export function generateSampleArtworkDataUrl(
 
   return canvas.toDataURL('image/png');
 }
+
+export interface SampleLabelOptions {
+  title?: string;
+  subtitle?: string;
+  surfaceName?: string;
+  color?: string;
+  bgColor?: string;
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Procedural label generator matching user options
+ */
+export function generateSampleLabel(options: SampleLabelOptions = {}): string {
+  const surface = options.surfaceName || 'FRONT';
+  const labelEn = options.title || 'FORMORA 3D';
+  const labelAr = options.subtitle || 'تصميم عبوة ثلاثي الأبعاد';
+  const accent = options.color || '#6366f1';
+  const bg = options.bgColor || '#ffffff';
+  const w = options.width || 1024;
+  const h = options.height || 1024;
+  return generateSampleArtworkDataUrl(surface, labelAr, labelEn, accent, bg, w, h);
+}

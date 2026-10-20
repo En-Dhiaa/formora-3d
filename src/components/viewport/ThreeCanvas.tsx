@@ -2,15 +2,43 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, TransformControls } from '@react-three/drei';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useProjectStore } from '../../store/useProjectStore';
 import { PackagingMesh } from './PackagingMesh';
 import { StudioEnvironment } from './StudioEnvironment';
 import { StudioFloor } from './StudioFloor';
 import { ViewportToolbar } from './ViewportToolbar';
 
-// Component inside Canvas to sync camera & scene reference
+// Native Three.js OrbitControls for React Three Fiber
+function StudioOrbitControls() {
+  const { camera, gl } = useThree();
+
+  useEffect(() => {
+    const controls = new OrbitControls(camera, gl.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.05; // prevent going beneath floor
+    controls.minDistance = 0.08;
+    controls.maxDistance = 5.0;
+
+    let animId: number;
+    const updateLoop = () => {
+      controls.update();
+      animId = requestAnimationFrame(updateLoop);
+    };
+    animId = requestAnimationFrame(updateLoop);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      controls.dispose();
+    };
+  }, [camera, gl]);
+
+  return null;
+}
+
+// Scene & Camera reference bridge
 function SceneController({ onSceneReady }: { onSceneReady: (scene: THREE.Scene, camera: THREE.Camera) => void }) {
   const { scene, camera } = useThree();
 
@@ -21,56 +49,20 @@ function SceneController({ onSceneReady }: { onSceneReady: (scene: THREE.Scene, 
   return null;
 }
 
-// Transform gizmo controller attached to selected object
-function TransformGizmoManager({
-  selectedId,
-  mode,
-  onTransformChange,
-}: {
-  selectedId: string | null;
-  mode: 'translate' | 'rotate' | 'scale' | null;
-  onTransformChange: (pos: [number, number, number], rot: [number, number, number], scale: [number, number, number]) => void;
-}) {
-  const { scene } = useThree();
-  const [targetObject, setTargetObject] = useState<THREE.Object3D | null>(null);
-  const transformRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (!selectedId || !mode) {
-      setTargetObject(null);
-      return;
-    }
-
-    // Find the group corresponding to selected object
-    let found: THREE.Object3D | null = null;
-    scene.traverse((child) => {
-      if (child instanceof THREE.Group && child.position && !found) {
-        // Child group
-      }
-    });
-  }, [selectedId, mode, scene]);
-
-  if (!mode || !selectedId) return null;
-
-  return null;
-}
-
 export const ThreeCanvas: React.FC = () => {
   const {
     project,
     viewMode,
-    transformMode,
     showGrid,
     language,
     setSelectedObjectId,
-    updateObjectTransform,
   } = useProjectStore();
 
   const [sceneRef, setSceneRef] = useState<THREE.Scene | null>(null);
   const [cameraRef, setCameraRef] = useState<THREE.Camera | null>(null);
   const [webGlAvailable, setWebGlAvailable] = useState<boolean>(true);
 
-  // Check WebGL support on mount
+  // Check WebGL availability on mount
   useEffect(() => {
     try {
       const testCanvas = document.createElement('canvas');
@@ -84,7 +76,6 @@ export const ThreeCanvas: React.FC = () => {
   const handleSceneReady = (scene: THREE.Scene, camera: THREE.Camera) => {
     setSceneRef(scene);
     setCameraRef(camera);
-    // Expose scene to window for high-res render access
     if (typeof window !== 'undefined') {
       (window as any).__FORMORA_SCENE__ = scene;
       (window as any).__FORMORA_CAMERA__ = camera;
@@ -108,12 +99,9 @@ export const ThreeCanvas: React.FC = () => {
     );
   }
 
-  // Camera settings
   const cam = project.camera;
-  const isOrtho = cam.mode === 'orthographic';
-
-  // Background styling
   const bg = project.background;
+
   let bgStyle: React.CSSProperties = {};
   if (bg.mode === 'solid') {
     bgStyle = { backgroundColor: bg.color1 };
@@ -127,7 +115,7 @@ export const ThreeCanvas: React.FC = () => {
       backgroundSize: '16px 16px',
     };
   } else {
-    bgStyle = { backgroundColor: '#0b0d13' };
+    bgStyle = { backgroundColor: '#0d0f14' };
   }
 
   return (
@@ -147,7 +135,6 @@ export const ThreeCanvas: React.FC = () => {
           far: 50,
         }}
         onPointerDown={(e) => {
-          // If clicked directly on canvas background, deselect object
           if (e.target === e.currentTarget) {
             setSelectedObjectId(null);
           }
@@ -156,14 +143,7 @@ export const ThreeCanvas: React.FC = () => {
         <SceneController onSceneReady={handleSceneReady} />
 
         {/* Orbit Controls */}
-        <OrbitControls
-          makeDefault
-          enableDamping
-          dampingFactor={0.05}
-          maxPolarAngle={Math.PI / 2 + 0.05} // prevent going below floor
-          minDistance={0.1}
-          maxDistance={4.0}
-        />
+        <StudioOrbitControls />
 
         {/* Lighting Setup */}
         <StudioEnvironment lighting={project.lighting} />
@@ -175,7 +155,7 @@ export const ThreeCanvas: React.FC = () => {
           showGrid={showGrid}
         />
 
-        {/* Packaging Objects */}
+        {/* Packaging Objects in Scene */}
         {project.objects.map((obj) => (
           <PackagingMesh
             key={obj.id}
@@ -187,7 +167,7 @@ export const ThreeCanvas: React.FC = () => {
         ))}
       </Canvas>
 
-      {/* Floating Viewport Toolbar */}
+      {/* Viewport Floating Toolbar */}
       <ViewportToolbar />
     </div>
   );
