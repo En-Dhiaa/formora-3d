@@ -41,6 +41,7 @@ interface ProjectState {
   isDielineModalOpen: boolean;
   isTemplatesModalOpen: boolean;
   isAIAssistantModalOpen: boolean;
+  isDeveloperModalOpen: boolean;
 
   // Actions
   setLanguage: (lang: 'ar' | 'en') => void;
@@ -53,6 +54,8 @@ interface ProjectState {
   setDielineModalOpen: (open: boolean) => void;
   setTemplatesModalOpen: (open: boolean) => void;
   setAIAssistantModalOpen: (open: boolean) => void;
+  setDeveloperModalOpen: (open: boolean) => void;
+  applySceneArrangement: (type: 'duo' | 'trio' | 'hero_companion' | 'lineup') => void;
 
   // Project Actions
   setProject: (project: FormoraProject) => void;
@@ -122,10 +125,17 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   setActiveTab: (tab) => set({ activeTab: tab }),
   setShowGrid: (show) => set({ showGrid: show }),
 
+  isExportModalOpen: false,
+  isDielineModalOpen: false,
+  isTemplatesModalOpen: false,
+  isAIAssistantModalOpen: false,
+  isDeveloperModalOpen: false,
+
   setExportModalOpen: (open) => set({ isExportModalOpen: open }),
   setDielineModalOpen: (open) => set({ isDielineModalOpen: open }),
   setTemplatesModalOpen: (open) => set({ isTemplatesModalOpen: open }),
   setAIAssistantModalOpen: (open) => set({ isAIAssistantModalOpen: open }),
+  setDeveloperModalOpen: (open) => set({ isDeveloperModalOpen: open }),
 
   setProject: (project) => {
     const current = get().project;
@@ -537,6 +547,73 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             : o
         ),
       },
+    }));
+  },
+
+  applySceneArrangement: (type) => {
+    const { project } = get();
+    const count = project.objects.length;
+    if (count === 0) return;
+
+    const current = project;
+    const updatedObjects = project.objects.map((obj, index) => {
+      let x = 0;
+      let z = 0;
+      let rotY = obj.transform.rotation[1];
+
+      if (type === 'duo') {
+        const spacing = 0.14;
+        x = (index - (count - 1) / 2) * spacing;
+        z = index % 2 === 0 ? 0.02 : -0.02;
+        rotY = index === 0 ? 0.15 : -0.15;
+      } else if (type === 'hero_companion') {
+        if (index === 0) {
+          x = -0.04;
+          z = 0.04;
+          rotY = -0.1;
+        } else {
+          x = 0.12 * index;
+          z = -0.06 * index;
+          rotY = 0.25;
+        }
+      } else if (type === 'trio') {
+        if (index === 0) {
+          x = -0.18;
+          z = -0.03;
+          rotY = 0.2;
+        } else if (index === 1) {
+          x = 0;
+          z = 0.03;
+          rotY = 0;
+        } else {
+          x = 0.18;
+          z = -0.03;
+          rotY = -0.2;
+        }
+      } else {
+        // lineup
+        const spacing = 0.16;
+        x = (index - (count - 1) / 2) * spacing;
+        z = 0;
+      }
+
+      return {
+        ...obj,
+        transform: {
+          ...obj.transform,
+          position: [x, obj.transform.position[1], z] as [number, number, number],
+          rotation: [obj.transform.rotation[0], rotY, obj.transform.rotation[2]] as [number, number, number],
+        },
+      };
+    });
+
+    set((state) => ({
+      project: {
+        ...state.project,
+        objects: updatedObjects,
+      },
+      history: [...state.history.slice(-15), current],
+      future: [],
     }));
   },
 

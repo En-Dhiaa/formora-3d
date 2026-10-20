@@ -13,6 +13,7 @@ import {
   Plus,
   Layers,
   HelpCircle,
+  User,
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { translations } from '../../utils/translations';
@@ -31,6 +32,7 @@ export const Header: React.FC = () => {
     setExportModalOpen,
     setTemplatesModalOpen,
     setAIAssistantModalOpen,
+    setDeveloperModalOpen,
     undo,
     redo,
   } = useProjectStore();
@@ -183,6 +185,16 @@ export const Header: React.FC = () => {
             <Save className="w-3.5 h-3.5" />
           </button>
         </div>
+
+        {/* Developer & Contact Info */}
+        <button
+          onClick={() => setDeveloperModalOpen(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface-50 hover:bg-surface-200 border border-surface-300/30 rounded-xl text-xs font-medium text-surface-300 hover:text-white transition-all shadow-sm"
+          title={language === 'ar' ? 'المطوّر والتواصل' : 'About Developer'}
+        >
+          <User className="w-3.5 h-3.5 text-accent-cyan" />
+          <span className="hidden lg:inline">{language === 'ar' ? 'المطوّر' : 'Developer'}</span>
+        </button>
 
         {/* Language Switcher */}
         <button

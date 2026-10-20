@@ -126,6 +126,34 @@ export const CameraPanel: React.FC = () => {
           </button>
         </div>
 
+        {/* Commercial Studio Lens Presets (Blender-level camera optics) */}
+        <div className="space-y-1.5 pt-1">
+          <label className="text-[11px] font-medium text-surface-400">
+            {language === 'ar' ? 'عدسات التصوير التجاري (Lens Focal Length)' : 'Commercial Lens Presets'}
+          </label>
+          <div className="grid grid-cols-4 gap-1.5">
+            {[
+              { mm: '35mm', fov: 54, label: 'Wide' },
+              { mm: '50mm', fov: 40, label: 'Standard' },
+              { mm: '85mm', fov: 24, label: 'Portrait' },
+              { mm: '105mm', fov: 19, label: 'Macro' },
+            ].map((lens) => (
+              <button
+                key={lens.mm}
+                onClick={() => updateCamera({ fov: lens.fov })}
+                className={`py-1.5 px-1 rounded-xl text-center border transition-all ${
+                  Math.abs(camera.fov - lens.fov) <= 2
+                    ? 'bg-brand-600 text-white border-brand-500 shadow-sm'
+                    : 'bg-surface-100 border-surface-300/30 text-surface-300 hover:text-white hover:bg-surface-200'
+                }`}
+              >
+                <span className="block text-[11px] font-bold font-mono">{lens.mm}</span>
+                <span className="block text-[9px] text-surface-400 truncate">{lens.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Field of View Slider */}
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-surface-400">
@@ -134,7 +162,7 @@ export const CameraPanel: React.FC = () => {
           </div>
           <input
             type="range"
-            min="20"
+            min="15"
             max="80"
             step="1"
             value={camera.fov}

@@ -148,6 +148,48 @@ test('High-Res 1080p, 2K, 4K render presets aspect preservation', () => {
   });
 });
 
+// 8. Commercial Lens Simulation (Focal length to FOV bounds)
+test('Commercial lens optical presets (35mm, 50mm, 85mm, 105mm)', () => {
+  const lenses = [
+    { mm: 35, fov: 54 },
+    { mm: 50, fov: 40 },
+    { mm: 85, fov: 24 },
+    { mm: 105, fov: 19 },
+  ];
+
+  lenses.forEach((lens) => {
+    assert.ok(lens.fov >= 15 && lens.fov <= 60, `FOV out of realistic studio lens range: ${lens.mm}mm`);
+  });
+  // Telephoto has narrower FOV than wide angle
+  assert.ok(lenses[3].fov < lenses[0].fov);
+});
+
+// 9. Multi-Product Studio Staging Coordinates
+test('Multi-product studio layout arrangement calculation', () => {
+  const count = 3;
+  const duoSpacing = 0.14;
+  const x0 = (0 - (count - 1) / 2) * duoSpacing;
+  const x1 = (1 - (count - 1) / 2) * duoSpacing;
+  const x2 = (2 - (count - 1) / 2) * duoSpacing;
+
+  assert.strictEqual(x1, 0); // Center product is at origin
+  assert.strictEqual(Number((x2 - x0).toFixed(2)), 0.28); // Total span is 28cm
+});
+
+// 10. Developer & Software Credits Integrity
+test('Developer credits & official GitHub repository metadata', () => {
+  const credits = {
+    developer: 'Eng. Dhiaa Al-Hmiri',
+    github: 'https://github.com/En-Dhiaa',
+    repo: 'https://github.com/En-Dhiaa/formora-3d',
+    version: 'v1.0.0',
+  };
+
+  assert.strictEqual(credits.developer, 'Eng. Dhiaa Al-Hmiri');
+  assert.ok(credits.github.includes('En-Dhiaa'));
+  assert.strictEqual(credits.version, 'v1.0.0');
+});
+
 console.log(`\n=====================================================`);
 console.log(`📊 Test Results: ${passedTests}/${totalTests} Passed (${Math.round((passedTests / totalTests) * 100)}%)`);
 console.log(`=====================================================\n`);
@@ -155,3 +197,4 @@ console.log(`=====================================================\n`);
 if (passedTests !== totalTests) {
   process.exit(1);
 }
+

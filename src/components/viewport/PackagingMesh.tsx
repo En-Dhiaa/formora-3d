@@ -12,6 +12,7 @@ import { buildCustomLatheGeometry } from '../../engine/geometry/CustomLatheGeome
 import { MaterialFactory, MATERIAL_PRESETS } from '../../engine/materials/MaterialFactory';
 import { ArtworkTextureManager } from '../../engine/textures/ArtworkTextureManager';
 import { calculateSurfaceDimensions } from '../../utils/dimensions';
+import { generateSubstrateDataUrl } from '../../utils/proceduralTextures';
 
 interface PackagingMeshProps {
   object: PackagingObject;
@@ -64,6 +65,34 @@ export const PackagingMesh: React.FC<PackagingMeshProps> = ({
     };
   }, [object.surfaceArtworks, object.materials.body?.color, surfaceDimensions]);
 
+  // Memoized procedural tactile substrate bump map
+  const substrateBumpTexture = useMemo(() => {
+    const substrateType = object.materials.body?.substrate;
+    if (!substrateType || substrateType === 'none' || typeof window === 'undefined') return null;
+    const dataUrl = generateSubstrateDataUrl(substrateType, 512, 512);
+    if (!dataUrl) return null;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    const img = document.createElement('img');
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(3, 3);
+
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0);
+      tex.needsUpdate = true;
+    };
+    img.src = dataUrl;
+
+    return tex;
+  }, [object.materials.body?.substrate]);
+
   // Box template rendering
   if (object.geometry.type === 'box') {
     const boxGeometry = useMemo(() => {
@@ -83,9 +112,9 @@ export const PackagingMesh: React.FC<PackagingMeshProps> = ({
       // 6 materials for right, left, top, bottom, front, back
       return BOX_SURFACES.map((surfaceKey) => {
         const tex = textures[surfaceKey] || null;
-        return MaterialFactory.createMaterial(bodyMatProps, tex);
+        return MaterialFactory.createMaterial(bodyMatProps, tex, substrateBumpTexture);
       });
-    }, [object.materials.body, textures, viewMode]);
+    }, [object.materials.body, textures, viewMode, substrateBumpTexture]);
 
     return (
       <group
@@ -124,8 +153,8 @@ export const PackagingMesh: React.FC<PackagingMeshProps> = ({
       if (viewMode === 'wireframe') return new THREE.MeshBasicMaterial({ wireframe: true, color: 0x818cf8 });
       if (viewMode === 'solid') return new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.5 });
       const labelTex = textures['front_label'] || textures['body'] || null;
-      return MaterialFactory.createMaterial(object.materials.body || MATERIAL_PRESETS.clear_glass, labelTex);
-    }, [object.materials.body, textures, viewMode]);
+      return MaterialFactory.createMaterial(object.materials.body || MATERIAL_PRESETS.clear_glass, labelTex, substrateBumpTexture);
+    }, [object.materials.body, textures, viewMode, substrateBumpTexture]);
 
     const capMat = useMemo(() => {
       if (viewMode === 'wireframe') return new THREE.MeshBasicMaterial({ wireframe: true, color: 0x818cf8 });
@@ -167,8 +196,8 @@ export const PackagingMesh: React.FC<PackagingMeshProps> = ({
       if (viewMode === 'wireframe') return new THREE.MeshBasicMaterial({ wireframe: true, color: 0x818cf8 });
       if (viewMode === 'solid') return new THREE.MeshStandardMaterial({ color: 0xe2e8f0 });
       const frontTex = textures['front'] || null;
-      return MaterialFactory.createMaterial(object.materials.body || MATERIAL_PRESETS.opaque_plastic, frontTex);
-    }, [object.materials.body, textures, viewMode]);
+      return MaterialFactory.createMaterial(object.materials.body || MATERIAL_PRESETS.opaque_plastic, frontTex, substrateBumpTexture);
+    }, [object.materials.body, textures, viewMode, substrateBumpTexture]);
 
     const capMat = useMemo(() => {
       return MaterialFactory.createMaterial(object.materials.cap || MATERIAL_PRESETS.glossy_plastic);
@@ -201,8 +230,8 @@ export const PackagingMesh: React.FC<PackagingMeshProps> = ({
       if (viewMode === 'wireframe') return new THREE.MeshBasicMaterial({ wireframe: true, color: 0x818cf8 });
       if (viewMode === 'solid') return new THREE.MeshStandardMaterial({ color: 0xe2e8f0 });
       const pouchTex = textures['front'] || null;
-      return MaterialFactory.createMaterial(object.materials.body || MATERIAL_PRESETS.foil_pouch, pouchTex);
-    }, [object.materials.body, textures, viewMode]);
+      return MaterialFactory.createMaterial(object.materials.body || MATERIAL_PRESETS.foil_pouch, pouchTex, substrateBumpTexture);
+    }, [object.materials.body, textures, viewMode, substrateBumpTexture]);
 
     return (
       <group
@@ -228,8 +257,8 @@ export const PackagingMesh: React.FC<PackagingMeshProps> = ({
 
     const bodyMat = useMemo(() => {
       const tex = textures['front'] || null;
-      return MaterialFactory.createMaterial(object.materials.body || MATERIAL_PRESETS.glossy_plastic, tex);
-    }, [object.materials.body, textures]);
+      return MaterialFactory.createMaterial(object.materials.body || MATERIAL_PRESETS.glossy_plastic, tex, substrateBumpTexture);
+    }, [object.materials.body, textures, substrateBumpTexture]);
 
     const capMat = useMemo(() => {
       return MaterialFactory.createMaterial(object.materials.cap || MATERIAL_PRESETS.matte_cardboard);

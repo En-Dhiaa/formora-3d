@@ -8,6 +8,7 @@ import { ExportModal } from '../components/modals/ExportModal';
 import { TemplatesModal } from '../components/modals/TemplatesModal';
 import { AIAssistantModal } from '../components/modals/AIAssistantModal';
 import { DielineModal } from '../components/modals/DielineModal';
+import { DeveloperModal } from '../components/modals/DeveloperModal';
 import { useProjectStore } from '../store/useProjectStore';
 
 export default function PackagingStudioPage() {
@@ -60,6 +61,7 @@ export default function PackagingStudioPage() {
         setTemplatesModalOpen(false);
         setAIAssistantModalOpen(false);
         setDielineModalOpen(false);
+        useProjectStore.getState().setDeveloperModalOpen(false);
       }
     };
 
@@ -91,6 +93,7 @@ export default function PackagingStudioPage() {
       <TemplatesModal />
       <AIAssistantModal />
       <DielineModal />
+      <DeveloperModal />
     </div>
   );
 }

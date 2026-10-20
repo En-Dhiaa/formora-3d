@@ -33,6 +33,7 @@ export const ScenePanel: React.FC = () => {
     renameObject,
     snapObjectToGround,
     centerSelectedObject,
+    applySceneArrangement,
   } = useProjectStore();
 
   const t = translations[language];
@@ -78,6 +79,48 @@ export const ScenePanel: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Studio Arrangement Presets for Multi-Product Staging */}
+      {project.objects.length > 1 && (
+        <div className="p-3.5 rounded-2xl bg-surface-50 border border-surface-300/30 space-y-2.5">
+          <label className="text-[11px] font-bold text-white flex items-center justify-between">
+            <span>{language === 'ar' ? 'تشكيلات الاستوديو التلقائية' : 'Studio Staging Layouts'}</span>
+            <span className="text-[10px] text-brand-400 font-normal">
+              {language === 'ar' ? 'تنسيق متناسق بضغطة واحدة' : '1-Click Auto Align'}
+            </span>
+          </label>
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              onClick={() => applySceneArrangement('hero_companion')}
+              className="p-2 rounded-xl bg-surface-100 hover:bg-surface-200 border border-surface-300/30 text-surface-300 hover:text-white text-xs font-medium text-left rtl:text-right transition-all"
+            >
+              <span className="block font-semibold text-white">🏆 {language === 'ar' ? 'بطل ومرافق' : 'Hero & Box'}</span>
+              <span className="text-[10px] text-surface-400">{language === 'ar' ? 'منتج أمامي مع علبة مائلة' : 'Front hero with angled box'}</span>
+            </button>
+            <button
+              onClick={() => applySceneArrangement('duo')}
+              className="p-2 rounded-xl bg-surface-100 hover:bg-surface-200 border border-surface-300/30 text-surface-300 hover:text-white text-xs font-medium text-left rtl:text-right transition-all"
+            >
+              <span className="block font-semibold text-white">👥 {language === 'ar' ? 'ثنائي متجاور' : 'Side-by-Side'}</span>
+              <span className="text-[10px] text-surface-400">{language === 'ar' ? 'عرض متجاور بزاوية طفيفة' : 'Balanced commercial duo'}</span>
+            </button>
+            <button
+              onClick={() => applySceneArrangement('trio')}
+              className="p-2 rounded-xl bg-surface-100 hover:bg-surface-200 border border-surface-300/30 text-surface-300 hover:text-white text-xs font-medium text-left rtl:text-right transition-all"
+            >
+              <span className="block font-semibold text-white">🔺 {language === 'ar' ? 'تشكيل هرمي (Trio)' : 'Triangle Trio'}</span>
+              <span className="text-[10px] text-surface-400">{language === 'ar' ? 'ثلاثة منتجات بتشكيل عميق' : 'Depth-staged product trio'}</span>
+            </button>
+            <button
+              onClick={() => applySceneArrangement('lineup')}
+              className="p-2 rounded-xl bg-surface-100 hover:bg-surface-200 border border-surface-300/30 text-surface-300 hover:text-white text-xs font-medium text-left rtl:text-right transition-all"
+            >
+              <span className="block font-semibold text-white">📏 {language === 'ar' ? 'صف متساوي' : 'Even Lineup'}</span>
+              <span className="text-[10px] text-surface-400">{language === 'ar' ? 'توزيع أفقي متساوي' : 'Clean horizontal catalog'}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Objects Outliner Hierarchy */}
       <div className="space-y-2">
